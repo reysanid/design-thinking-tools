@@ -1,0 +1,462 @@
+<title>دفتر سفارش دایرکت</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow-header tool, tabs on top, work area below. Plain, calm, ledger-like. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#15263a; --muted:#5a6a7c; --line:#d6dde6;
+  --accent:#1f4e79; --accent-ink:#ffffff; --field:#f8fafc;
+  --info-bg:#e4edf7; --info-fg:#1b4670;
+  --warn-bg:#fff2d2; --warn-fg:#7a4a00;
+  --bad-bg:#fde3df; --bad-fg:#8b1d14;
+  --ok-bg:#dcf2e4; --ok-fg:#1c5a33;
+  --font:'Vazirmatn',Tahoma,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1722; --surface:#162331; --ink:#e5ecf4; --muted:#9db0c4; --line:#293a4d;
+  --accent:#7ab2e6; --accent-ink:#0a1420; --field:#101c29;
+  --info-bg:#1b2f45; --info-fg:#a9cdf0; --warn-bg:#3a2d0f; --warn-fg:#f1c66f;
+  --bad-bg:#3c1b19; --bad-fg:#f4a59d; --ok-bg:#15331f; --ok-fg:#8fd4a5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1722; --surface:#162331; --ink:#e5ecf4; --muted:#9db0c4; --line:#293a4d;
+  --accent:#7ab2e6; --accent-ink:#0a1420; --field:#101c29;
+  --info-bg:#1b2f45; --info-fg:#a9cdf0; --warn-bg:#3a2d0f; --warn-fg:#f1c66f;
+  --bad-bg:#3c1b19; --bad-fg:#f4a59d; --ok-bg:#15331f; --ok-fg:#8fd4a5; color-scheme:dark}
+*{box-sizing:border-box}
+html{direction:rtl}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.75 var(--font);margin:0;
+  padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:24px;line-height:1.4;margin:0;font-weight:700;text-wrap:balance}
+h2{font-size:17px;margin:0 0 10px;font-weight:700}
+h3{font-size:15px;margin:0 0 6px;font-weight:700}
+p{margin:0 0 8px}
+.muted{color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.top p{margin:2px 0 0;max-width:62ch}
+.flow{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);padding:0;margin:0;list-style:none}
+.flow li{display:flex;gap:6px;align-items:center}
+.flow b{color:var(--ink)}
+.banner{background:var(--info-bg);color:var(--info-fg);padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:14px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:16px}
+nav.tabs button{font:500 14px var(--font);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+input,select,textarea{font:400 14px var(--font);width:100%;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:7px 9px;min-width:0}
+textarea{resize:vertical;line-height:1.7}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 12px;margin-bottom:10px}
+.btn{font:500 14px var(--font);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:7px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.small{padding:3px 10px;font-size:13px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-block;font-size:12.5px;padding:1px 9px;border-radius:99px;background:var(--info-bg);color:var(--info-fg);line-height:1.8}
+.chip.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.chip.bad{background:var(--bad-bg);color:var(--bad-fg)}
+.chip.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.seg button{font:500 13px var(--font);border:0;background:var(--surface);color:var(--muted);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.miss label{color:var(--warn-fg)}
+.miss input,.miss select,.miss textarea{border-color:var(--warn-fg);background:var(--warn-bg)}
+.hint{font-size:12.5px;color:var(--warn-fg)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 22px;margin:0 0 14px;font-size:14px}
+.stats b{font-size:18px;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.card header{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.card .id{font-weight:700;font-variant-numeric:tabular-nums}
+.card select{width:auto}
+.tableBox{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
+th{font-weight:500;color:var(--muted);font-size:13px}
+td input{min-width:80px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.steps span{padding:4px 12px;border-radius:99px;border:1px solid var(--line);color:var(--muted);font-size:13px}
+.steps span.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.steps span.done{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;z-index:20}
+pre.msg{white-space:pre-wrap;background:var(--field);border:1px solid var(--line);border-radius:7px;padding:10px;font:400 13.5px/1.8 var(--font);margin:8px 0 0}
+.empty{color:var(--muted);padding:18px 4px}
+a{color:var(--accent)}
+details summary{cursor:pointer;color:var(--muted);font-size:13px}
+@media(prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--accent)}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>دفتر سفارش دایرکت</h1>
+      <p class="muted">برای فروشندهٔ تنهای اینستاگرامی: سفارش‌ها و مشتری‌ها از دایرکت بیرون می‌آیند و در یک جا می‌مانند.</p>
+    </div>
+    <ol class="flow" aria-label="روند کار">
+      <li><b>۱</b> چت را بچسبان</li><li><b>۲</b> ردیف سفارش را تأیید کن</li><li><b>۳</b> لینک وضعیت را به مشتری بده</li>
+    </ol>
+  </div>
+  <div class="banner" id="banner">نمونهٔ اولیه (MVP) برای چالش. داده‌های داخل صفحه نمونه‌اند و از پروندهٔ چالش الهام گرفته‌اند. ذخیره فقط در مرورگر خودت انجام می‌شود.</div>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+<div id="toastBox" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const fa=n=>Number(n).toLocaleString('fa-IR');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAY=864e5;
+const daysSince=ms=>Math.floor((Date.now()-ms)/DAY);
+const kt=n=>fa(Math.round(n))+' هزار تومان';
+function toast(t){const b=$('#toastBox');b.innerHTML='<div class="toast">'+esc(t)+'</div>';setTimeout(()=>{b.innerHTML=''},2200)}
+function copy(text){
+  const done=()=>toast('کپی شد');
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){toast('متن را انتخاب و کپی کن')}ta.remove()};
+  try{navigator.clipboard.writeText(text).then(done,fallback)}catch(e){fallback()}
+}
+function jdate(ms){try{return new Date(ms).toLocaleDateString('fa-IR-u-ca-persian')}catch(e){return ''}}
+
+/* ---------- model ---------- */
+const STATUSES=['جدید','پول رسید','در حال ساخت','ارسال شد','تحویل شد'];
+const LABEL={name:'نام',handle:'آیدی اینستاگرام',item:'محصول',qty:'تعداد',size:'اندازه',style:'رنگ یا پارچه',frame:'قاب',measures:'اندازه‌های بدن',dueDate:'تاریخ نیاز',address:'آدرس کامل',pay:'پرداخت',note:'یادداشت'};
+const CATS={
+  fixed:{label:'محصول ثابت',fields:['name','handle','item','qty','address','pay','note'],req:['item','qty','address']},
+  portrait:{label:'تابلو سفارشی',fields:['name','handle','item','size','style','frame','dueDate','address','pay','note'],req:['item','size','style','frame','dueDate']},
+  dress:{label:'لباس سفارشی',fields:['name','handle','item','measures','style','dueDate','address','pay','note'],req:['item','measures','style','dueDate','address']}
+};
+const PAY={unpaid:'پرداخت نشده',deposit:'بیعانه',paid:'پرداخت کامل'};
+const now=Date.now();
+const iso=d=>new Date(now+d*DAY).toISOString().slice(0,10);
+const DEFAULT={
+  threshold:15, post:95, cycle:45, mode:'demo', url:'http://localhost:5678/webhook/extract-order', seq:112,
+  products:[
+    {key:'candle_s',name:'شمع کوچک ۲۰۰ گرمی',price:260,cost:254},
+    {key:'candle_l',name:'شمع بزرگ ۴۰۰ گرمی',price:420,cost:443},
+    {key:'gift2',name:'ست هدیه دو تایی',price:490,cost:548},
+    {key:'portrait',name:'تابلو ۴۰×۵۰ (بدون قاب)',price:1800,cost:750}
+  ],
+  orders:[
+    {id:'O101',cat:'fixed',name:'',handle:'@tina_7_s',item:'شمع کوچک دارچین',pk:'candle_s',qty:2,address:'تهران',pay:'paid',status:1,tracking:'',free:false,created:now-4*DAY},
+    {id:'O102',cat:'fixed',name:'رعنا رضایی',handle:'@rana.92_m',item:'شمع بزرگ ۴۰۰ گرمی',pk:'candle_l',qty:1,address:'کرج، گوهردشت، خیابان ۱۲',pay:'paid',status:3,tracking:'264814731125',free:false,created:now-9*DAY},
+    {id:'O103',cat:'fixed',name:'سمانه',handle:'@samaneh.4_m',item:'ست هدیه دو تایی',pk:'gift2',qty:3,address:'تهران، ونک، پلاک ۸',pay:'paid',status:4,tracking:'264838925793',free:true,created:now-20*DAY},
+    {id:'O104',cat:'fixed',name:'نسرین',handle:'@noor_gift',item:'شمع بزرگ ۴۰۰ گرمی',pk:'candle_l',qty:1,address:'تهران، سعادت‌آباد',pay:'paid',status:4,tracking:'264842195320',free:false,created:now-52*DAY},
+    {id:'O097',cat:'fixed',name:'نسرین',handle:'@noor_gift',item:'شمع بزرگ ۴۰۰ گرمی',pk:'candle_l',qty:1,address:'تهران، سعادت‌آباد',pay:'paid',status:4,tracking:'264842164496',free:false,created:now-95*DAY},
+    {id:'O105',cat:'portrait',name:'سارا',handle:'@sara',item:'پرتره خانوادگی',pk:'portrait',qty:1,size:'۴۰×۵۰',style:'پس‌زمینه سبز',frame:'دارد',dueDate:iso(5),address:'',pay:'deposit',status:2,tracking:'',free:false,created:now-11*DAY},
+    {id:'O106',cat:'portrait',name:'',handle:'@mahsa.r',item:'پرتره سگ',pk:'portrait',qty:1,size:'۳۰×۴۰',style:'',frame:'',dueDate:'',address:'',pay:'unpaid',status:0,tracking:'',free:false,created:now-2*DAY},
+    {id:'O107',cat:'dress',name:'',handle:'@mona.x',item:'دامن چین‌دار',pk:'',qty:1,measures:'کمر ۷۲، قد ۱۶۵',style:'آبی (کدام آبی؟)',dueDate:iso(25),address:'',pay:'deposit',status:0,tracking:'',free:false,created:now-3*DAY},
+    {id:'O108',cat:'fixed',name:'ندا',handle:'@neda_k',item:'شمع کوچک ۲۰۰ گرمی',pk:'candle_s',qty:1,address:'اصفهان، چهارباغ',pay:'paid',status:3,tracking:'',free:false,created:now-6*DAY}
+  ]
+};
+let S;
+function load(){
+  try{const r=localStorage.getItem('dafar-v1');if(r){const o=JSON.parse(r);if(o&&o.orders&&o.products)return o}}catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT));
+}
+function save(){try{localStorage.setItem('dafar-v1',JSON.stringify(S))}catch(e){}}
+S=load();
+
+/* ---------- business rules ---------- */
+function product(o){return S.products.find(p=>p.key===o.pk)}
+function missing(o){
+  const c=CATS[o.cat]||CATS.fixed, out=[];
+  if(!o.name&&!o.handle)out.push('نام یا آیدی');
+  c.req.forEach(k=>{if(o[k]===''||o[k]==null||o[k]===0)out.push(LABEL[k])});
+  return out;
+}
+function marginOf(o){
+  const p=product(o); if(!p||p.cost==null||p.cost==='')return null;
+  const unit=(p.price-p.cost); const pct=p.price?unit/p.price*100:0;
+  const total=unit*(o.qty||1)-(o.free?S.post:0);
+  return{pct,total};
+}
+function flags(o){
+  const f=[]; const m=missing(o);
+  if(m.length&&o.status<3)f.push({t:'warn',x:'ناقص: '+m.join('، ')});
+  const d=daysSince(o.created);
+  if(o.pay==='paid'&&o.status<2&&d>=2)f.push({t:'bad',x:'پول رسیده و '+fa(d)+' روز بدون اقدام'});
+  if(o.status===3&&!o.tracking)f.push({t:'warn',x:'ارسال شده ولی کد رهگیری ندارد'});
+  if(o.dueDate&&o.status<3){const left=Math.ceil((new Date(o.dueDate).getTime()-now)/DAY);
+    if(left<0)f.push({t:'bad',x:'مهلت گذشته'});else if(left<=7)f.push({t:'warn',x:'مهلت '+fa(left)+' روز دیگر'})}
+  const g=marginOf(o);
+  if(g){ if(g.total<0&&o.free)f.push({t:'bad',x:'با ارسال رایگان '+kt(-g.total)+' ضرر'});
+    else if(g.pct<0)f.push({t:'bad',x:'قیمت از هزینهٔ مواد کمتر است ('+fa(Math.abs(g.pct).toFixed(0))+'٪ زیر)'});
+    else if(g.pct<S.threshold)f.push({t:'warn',x:'حاشیه '+fa(g.pct.toFixed(0))+'٪ (زیر '+fa(S.threshold)+'٪)'})}
+  return f;
+}
+const needsAction=o=>flags(o).some(f=>f.t==='bad'||f.t==='warn')&&o.status<4;
+function guessPk(item,cat){
+  const t=item||''; if(cat==='portrait')return 'portrait';
+  if(/ست/.test(t))return 'gift2'; if(/بزرگ/.test(t))return 'candle_l'; if(/شمع/.test(t))return 'candle_s'; return '';
+}
+function nextId(){S.seq+=1;return 'O'+S.seq}
+function statusLink(id){return location.href.split('#')[0]+'#status-'+id}
+function statusMsg(o){
+  const base='سلام'+(o.name?' '+o.name:'')+'، ';
+  const link=statusLink(o.id);
+  if(o.status===0)return base+'سفارشت با کد '+o.id+' ثبت شد. بعد از پرداخت، فیش را همین‌جا بفرست تا وضعیت را به‌روز کنم. وضعیت سفارش: '+link;
+  if(o.status===1)return base+'پرداختت رسید و سفارش '+o.id+' ثبت شد. هر مرحله را از این لینک می‌بینی: '+link;
+  if(o.status===2)return base+'سفارش '+o.id+' در حال ساخته شدن است. وضعیت: '+link;
+  if(o.status===3)return base+'سفارش '+o.id+' ارسال شد'+(o.tracking?' و کد رهگیری‌ات '+o.tracking+' است':'')+'. وضعیت: '+link;
+  return base+'سفارش '+o.id+' تحویل شده است. اگر راضی بودی، خوشحال می‌شوم دوباره سفارش بدهی.';
+}
+
+/* ---------- field builder ---------- */
+function fieldHtml(k,v,cat,miss){
+  const id='f_'+k, cls=miss?' miss':'';
+  let ctl;
+  if(k==='item'&&cat==='fixed'){
+    const opts=S.products.filter(p=>p.key!=='portrait').map(p=>'<option'+(v===p.name?' selected':'')+'>'+esc(p.name)+'</option>').join('');
+    ctl='<input id="'+id+'" list="dl_item" value="'+esc(v)+'" placeholder="مثلاً شمع کوچک دارچین"><datalist id="dl_item">'+opts+'</datalist>';
+  }else if(k==='frame'){
+    ctl='<select id="'+id+'"><option value="">نامعلوم</option>'+['دارد','ندارد'].map(x=>'<option'+(v===x?' selected':'')+'>'+x+'</option>').join('')+'</select>';
+  }else if(k==='pay'){
+    ctl='<select id="'+id+'">'+Object.keys(PAY).map(x=>'<option value="'+x+'"'+(v===x?' selected':'')+'>'+PAY[x]+'</option>').join('')+'</select>';
+  }else if(k==='qty'){ctl='<input id="'+id+'" type="number" min="1" value="'+esc(v)+'">';}
+  else if(k==='dueDate'){ctl='<input id="'+id+'" type="date" value="'+esc(v)+'">';}
+  else if(k==='address'||k==='note'||k==='measures'){ctl='<textarea id="'+id+'" rows="2"'+(k==='measures'?' placeholder="دور سینه، کمر، باسن، قد"':'')+'>'+esc(v)+'</textarea>';}
+  else{ctl='<input id="'+id+'" value="'+esc(v)+'"'+(k==='handle'?' dir="ltr" placeholder="@..."':'')+'>';}
+  return '<div class="'+cls.trim()+'"><label for="'+id+'">'+((k==='style'&&cat==='portrait')?'رنگ پس‌زمینه یا سبک':LABEL[k])+'</label>'+ctl+'</div>';
+}
+function formHtml(cat,vals,hints){
+  const c=CATS[cat];
+  return '<div class="row">'+c.fields.map(k=>{
+    const v=vals[k]==null?'':vals[k];
+    const isMiss=(c.req.indexOf(k)>-1&&(v===''||v===0))||(!vals.name&&!vals.handle&&(k==='name'||k==='handle'));
+    return fieldHtml(k,v,cat,isMiss).replace('</div>',((hints&&hints[k])?'<div class="hint">'+esc(hints[k])+'</div>':'')+'</div>');
+  }).join('')+'</div>';
+}
+function readForm(root,cat){
+  const o={cat}; CATS[cat].fields.forEach(k=>{const el=$('#f_'+k,root); if(!el)return; let v=el.value.trim(); if(k==='qty')v=v?parseInt(v,10):1; o[k]=v});
+  if(cat==='fixed'||cat==='portrait')o.pk=guessPk(o.item,cat); else o.pk='';
+  const p=product(o); if(p&&cat==='fixed')o.item=o.item;
+  return o;
+}
+function addOrder(o){
+  o.id=nextId(); o.status=0; o.tracking=''; o.free=false; o.created=Date.now();
+  if(!o.qty)o.qty=1; S.orders.unshift(o); save(); return o;
+}
+
+/* ---------- samples & extraction ---------- */
+const SAMPLES=[
+ {t:'چت ۱ — سفارش شمع',chat:'مشتری: سلام دو تا شمع کوچک دارچین می‌خوام برای هدیه، آدرسم تهرانه\nپیج: سلام چشم، ثبت شد. فیش رو بفرستید\nمشتری: واریز کردم [عکس فیش]\nمشتری: سلام، سفارشم ارسال شد؟\nمشتری: سه روزه پیام دادم جواب نمی‌دید',
+  out:{category:'fixed',customer_name:null,instagram_id:null,item:'شمع کوچک دارچین',quantity:2,size:null,color_or_fabric:null,frame:null,measurements:null,deadline_text:null,address:'تهران',payment:'paid',notes:'برای هدیه. مشتری دو بار پیگیری کرده و پاسخی نگرفته.',missing:['آدرس کامل','نام یا آیدی']}},
+ {t:'چت ۲ — پرتره',chat:'مشتری: سلام یه پرتره خودم و همسرم می‌خوام [عکس]\nپیج: سلام عزیزم چه سایزی؟ قاب می‌خواید؟ تا کی لازم دارید؟\nمشتری: ۴۰ در ۵۰ فکر کنم. بعداً می‌گم\nمشتری: سلام پس‌زمینه سبز باشه لطفاً\nپیج: حتماً. قاب چی شد؟\nمشتری: راستی تاریخ تولدش ۱۲ شهریوره، می‌رسه؟',
+  out:{category:'portrait',customer_name:null,instagram_id:null,item:'پرتره زوج',quantity:1,size:'۴۰×۵۰ (مشتری مطمئن نیست)',color_or_fabric:'پس‌زمینه سبز',frame:null,measurements:null,deadline_text:'۱۲ شهریور (تولد)',address:null,payment:'unpaid',notes:'عکس مرجع فرستاده شده. مشتری پرسیده «می‌رسه؟» و هنوز پاسخی نگرفته.',missing:['قاب','آدرس','نام یا آیدی']}},
+ {t:'چت ۳ — دوخت لباس',chat:'مشتری: سلام این مدل رو می‌دوزید؟ [عکس]\nپیج: سلام بله. سایزهاتون رو بفرستید: دور سینه، کمر، باسن، قد\nمشتری: کمر ۷۲، قد ۱۶۵. بقیه رو بعداً می‌فرستم\nپیج: پارچه رو از کدوم عکسا انتخاب کردید؟\nمشتری: همون آبیه که سه‌شنبه فرستادید\nپیج: کدوم آبی؟ دو تا آبی فرستادم\nمشتری: دور سینه ۹۰، باسن ۹۸. تا آخر ماه می‌رسه؟',
+  out:{category:'dress',customer_name:null,instagram_id:null,item:'دوخت طبق عکس مدل',quantity:1,size:null,color_or_fabric:'آبی (کدام آبی؟ نامشخص)',frame:null,measurements:'سینه ۹۰، کمر ۷۲، باسن ۹۸، قد ۱۶۵',deadline_text:'تا آخر ماه',address:null,payment:'unpaid',notes:'پارچهٔ دقیق هنوز مشخص نشده، چون دو آبی فرستاده شده.',missing:['پارچهٔ دقیق','آدرس','نام یا آیدی']}}
+];
+let X={chat:SAMPLES[0].chat,out:null,sample:0,busy:false,err:''};
+
+function outToVals(out){
+  const frame=out.frame==='yes'||out.frame==='دارد'?'دارد':(out.frame==='no'||out.frame==='ندارد'?'ندارد':'');
+  const pay=({paid:'paid',deposit:'deposit',unpaid:'unpaid'})[out.payment]||'unpaid';
+  return{name:out.customer_name||'',handle:out.instagram_id||'',item:out.item||'',qty:out.quantity||1,size:out.size||'',style:out.color_or_fabric||'',frame,measures:out.measurements||'',dueDate:'',address:out.address||'',pay,note:out.notes||''};
+}
+function normalize(raw){
+  const o=raw&&typeof raw==='object'?raw:{};
+  const cat=['fixed','portrait','dress'].indexOf(o.category)>-1?o.category:'fixed';
+  const s=v=>(v==null||v==='')?null:String(v);
+  return{category:cat,customer_name:s(o.customer_name),instagram_id:s(o.instagram_id),item:s(o.item),quantity:Number.isFinite(+o.quantity)&&+o.quantity>0?+o.quantity:null,size:s(o.size),color_or_fabric:s(o.color_or_fabric),frame:s(o.frame),measurements:s(o.measurements),deadline_text:s(o.deadline_text),address:s(o.address),payment:s(o.payment),notes:s(o.notes),missing:Array.isArray(o.missing)?o.missing.map(String):[]};
+}
+async function runExtract(){
+  X.err=''; 
+  if(!X.chat.trim()){X.err='اول متن چت را بچسبان.';return renderExtract()}
+  if(S.mode==='demo'){
+    const i=SAMPLES.findIndex(s=>s.chat.trim()===X.chat.trim());
+    if(i<0){X.err='حالت نمونه فقط برای سه چت نمونه کار می‌کند. برای متن دلخواه، حالت «n8n محلی» را روشن کن و فایل index.html را روی کامپیوتر خودت باز کن.';X.out=null;return renderExtract()}
+    X.out=normalize(SAMPLES[i].out); X.sample=i; return renderExtract();
+  }
+  X.busy=true; renderExtract();
+  try{
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),90000);
+    const r=await fetch(S.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat:X.chat}),signal:ctl.signal});
+    clearTimeout(to);
+    if(!r.ok)throw new Error('وضعیت '+r.status);
+    X.out=normalize(await r.json());
+  }catch(e){
+    X.out=null;
+    X.err='به n8n وصل نشد ('+(e&&e.message?e.message:'خطا')+'). بررسی کن: ۱) workflow فعال (Active) یا در حالت Test باشد، ۲) آدرس درست باشد، ۳) این صفحه را از فایل روی کامپیوتر خودت باز کرده باشی؛ اگر از لینک اشتراکی باز شده، مرورگر اتصال به localhost را مسدود می‌کند.';
+  }
+  X.busy=false; renderExtract();
+}
+
+/* ---------- views ---------- */
+const TABS=[['extract','سفارش از چت'],['board','جدول سفارش‌ها'],['form','فرم مشتری'],['customers','مشتری‌ها'],['costs','هزینه و حاشیه']];
+function renderTabs(cur){
+  $('#tabs').innerHTML=TABS.map(t=>'<button role="tab" aria-selected="'+(t[0]===cur)+'" data-tab="'+t[0]+'">'+t[1]+'</button>').join('');
+  $$('#tabs button').forEach(b=>b.onclick=()=>{location.hash=b.dataset.tab});
+}
+
+/* بررسی ساده و بدون مدل: عبارت‌های تاریخ در متن چت */
+function findDates(t){
+  const re=/[۰-۹0-9]{1,2}\s*(?:فروردین|اردیبهشت|خرداد|تیر|مرداد|شهریور|مهر|آبان|آذر|بهمن|اسفند)|آخر\s*(?:ماه|هفته)|[۰-۹0-9]+\s*(?:روز|هفته)\s*(?:دیگه|دیگر|بعد)/g;
+  const m=String(t||'').match(re)||[];
+  return m.filter((x,i)=>m.indexOf(x)===i).map(x=>x.replace(/\s+/g,' '));
+}
+function norm(s){return String(s||'').replace(/[يى]/g,'ی').replace(/ك/g,'ک').replace(/[‌‏]/g,' ');}
+function itemInChat(item,chat){
+  const c=norm(chat), toks=norm(item).split(/\s+/).filter(w=>w.length>=3);
+  if(!toks.length)return true;
+  return toks.some(w=>c.indexOf(w)>-1);
+}
+function findColors(t){
+  const m=norm(t).match(/آبی|سبز|قرمز|مشکی|سفید|زرد|صورتی|بنفش|سرمه‌ای|سرمه ای|کرم|طوسی|نارنجی|قهوه‌ای|قهوه ای/g)||[];
+  return m.filter((x,i)=>m.indexOf(x)===i);
+}
+function findSize(t){
+  const m=String(t||'').match(/[۰-۹0-9]{2,3}\s*(?:در|×|x|X|\*)\s*[۰-۹0-9]{2,3}/);
+  return m?m[0].replace(/\s+/g,' '):'';
+}
+function findBg(t){
+  const m=String(t||'').match(/پس[‌ ]?زمینه\s*([^\s،.؟!]+)/);
+  return m?('پس‌زمینه '+m[1]):'';
+}
+function renderExtract(){
+  const v=$('#view'); const hasOut=!!X.out; let vals=hasOut?outToVals(X.out):null;
+  const cat=hasOut?X.out.category:'fixed';
+  const hints={};
+  if(hasOut&&X.out.deadline_text)hints.dueDate='در چت: '+X.out.deadline_text+' (تاریخ را خودت انتخاب کن)';
+  else if(hasOut){const f=findDates(X.chat); if(f.length)hints.dueDate='مدل تاریخی برنگرداند، ولی در چت آمده: '+f.join('، ')+' (تاریخ را خودت انتخاب کن)';}
+  if(hasOut&&vals.item&&!itemInChat(vals.item,X.chat))hints.item='این کلمه در متن چت پیدا نشد؛ احتمالاً مدل خودش نوشته. بررسی کن.';
+  if(hasOut&&cat==='dress'&&!vals.style){const c=findColors(X.chat); if(c.length)hints.style='مدل خالی گذاشت، ولی در چت رنگ آمده: '+c.join('، ')+' (دقیق‌ترش را از مشتری بپرس)';}
+  if(hasOut&&cat==='portrait'){
+    if(!vals.size){const z=findSize(X.chat); if(z)hints.size='مدل خالی گذاشت، ولی در چت آمده: '+z;}
+    if(!vals.style){const b=findBg(X.chat); if(b)hints.style='مدل خالی گذاشت، ولی در چت آمده: '+b;}
+  }
+  v.innerHTML='<div class="grid2">'+
+   '<section class="panel"><h2>چت دایرکت</h2>'+
+   '<div class="chips" style="margin-bottom:8px">'+SAMPLES.map((s,i)=>'<button class="btn small" data-s="'+i+'">'+esc(s.t)+'</button>').join('')+'</div>'+
+   '<label for="chat">متن گفتگو را اینجا بچسبان</label><textarea id="chat" rows="11" style="direction:rtl">'+esc(X.chat)+'</textarea>'+
+   '<div class="seg" role="group" aria-label="حالت" style="margin-top:10px"><button data-m="demo" aria-pressed="'+(S.mode==='demo')+'">حالت نمونه</button><button data-m="live" aria-pressed="'+(S.mode==='live')+'">n8n محلی</button></div>'+
+   (S.mode==='live'?'<label for="url">آدرس webhook</label><input id="url" dir="ltr" value="'+esc(S.url)+'">':'<p class="muted" style="font-size:13px">در حالت نمونه، خروجی از پیش ذخیره شده است و فقط برای سه چت نمونه کار می‌کند. در حالت n8n، متن به مدل Ollama روی کامپیوتر خودت می‌رود.</p>')+
+   '<div class="btns"><button class="btn primary" id="go"'+(X.busy?' disabled':'')+'>'+(X.busy?'در حال استخراج…':'استخراج سفارش')+'</button></div>'+
+   (X.err?'<p class="hint" style="margin-top:10px">'+esc(X.err)+'</p>':'')+
+   '</section>'+
+   '<section class="panel"><h2>ردیف پیشنهادی</h2>'+
+   (hasOut?
+     '<div class="seg" role="group" aria-label="دسته" id="catSeg">'+Object.keys(CATS).map(k=>'<button data-c="'+k+'" aria-pressed="'+(k===cat)+'">'+CATS[k].label+'</button>').join('')+'</div>'+
+     '<div id="ef">'+formHtml(cat,vals,hints)+'</div>'+
+     (function(){const ms=X.out.missing.filter(m=>!(cat!=='portrait'&&/پس[‌ ]?زمینه/.test(m)));return ms.length?'<p class="hint">مدل هم این‌ها را نامعلوم دانست: '+esc(ms.join('، '))+'</p>':'';})()+
+     '<p class="muted" style="font-size:13px">خانه‌های زرد هنوز خالی‌اند. مدل فقط پیشنهاد می‌دهد؛ ذخیره بعد از تأیید تو انجام می‌شود.</p>'+
+     '<div class="btns"><button class="btn primary" id="saveO">ذخیره در جدول</button><button class="btn" id="askO">ساخت پیام برای اطلاعات ناقص</button></div><div id="askOut"></div>'
+   :'<p class="empty">بعد از استخراج، فیلدهای سفارش اینجا می‌آید و آنچه ناقص است زرد می‌شود.</p>')+
+   '</section></div>';
+  $('#chat').oninput=e=>{X.chat=e.target.value};
+  $$('[data-s]',v).forEach(b=>b.onclick=()=>{X.chat=SAMPLES[+b.dataset.s].chat;X.out=null;X.err='';renderExtract()});
+  $$('[data-m]',v).forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;save();X.err='';renderExtract()});
+  const u=$('#url'); if(u)u.oninput=e=>{S.url=e.target.value.trim();save()};
+  $('#go').onclick=runExtract;
+  if(hasOut){
+    $$('#catSeg button').forEach(b=>b.onclick=()=>{X.out.category=b.dataset.c;renderExtract()});
+    const cur=()=>readForm($('#ef'),cat);
+    $('#saveO').onclick=()=>{const o=cur(); const o2=Object.assign({},vals,o); const a=addOrder(o2); toast('ذخیره شد: '+a.id); X.out=null; location.hash='board'};
+    $('#askO').onclick=()=>{const o=cur(); const m=missing(o); const t=m.length?'سلام'+(o.name?' '+o.name:'')+'، برای ثبت کامل سفارشت این موارد را هم لازم دارم:\n'+m.map(x=>'- '+x).join('\n')+'\nلطفاً همه را یک‌جا در این فرم بنویس: '+location.href.split('#')[0]+'#form':'اطلاعات این سفارش کامل است.';
+      $('#askOut').innerHTML='<pre class="msg">'+esc(t)+'</pre><div class="btns"><button class="btn small" id="cp">کپی پیام</button></div>'; $('#cp').onclick=()=>copy(t)};
+  }
+}
+
+let filter='all';
+function renderBoard(){
+  const v=$('#view'); const all=S.orders;
+  const open=all.filter(o=>o.status<4), act=all.filter(needsAction);
+  const list=all.filter(o=>filter==='all'?true:filter==='act'?needsAction(o):filter==='open'?o.status<4:o.status===4);
+  v.innerHTML='<div class="stats"><span><b>'+fa(open.length)+'</b> سفارش باز</span><span><b>'+fa(act.length)+'</b> نیازمند اقدام</span><span><b>'+fa(all.filter(o=>missing(o).length&&o.status<3).length)+'</b> با اطلاعات ناقص</span></div>'+
+   '<div class="seg" role="group" aria-label="فیلتر">'+[['all','همه'],['act','نیازمند اقدام'],['open','باز'],['done','تحویل‌شده']].map(f=>'<button data-f="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+'</button>').join('')+'</div>'+
+   (list.length?'<div class="cards">'+list.map(cardHtml).join('')+'</div>':'<p class="empty">سفارشی در این فیلتر نیست.</p>');
+  $$('[data-f]',v).forEach(b=>b.onclick=()=>{filter=b.dataset.f;renderBoard()});
+  $$('.card',v).forEach(c=>{
+    const o=S.orders.find(x=>x.id===c.dataset.id);
+    $('.st',c).onchange=e=>{o.status=+e.target.value;save();renderBoard()};
+    const tr=$('.tr',c); if(tr)tr.onchange=e=>{o.tracking=e.target.value.trim();save();renderBoard()};
+    $('.lk',c).onclick=()=>copy(statusLink(o.id));
+    $('.mg',c).onclick=()=>copy(statusMsg(o));
+    $('.fr',c).onchange=e=>{o.free=e.target.checked;save();renderBoard()};
+  });
+}
+function cardHtml(o){
+  const p=product(o), g=marginOf(o), fl=flags(o);
+  const who=(o.name||'')+(o.name&&o.handle?' · ':'')+(o.handle?'<span dir="ltr">'+esc(o.handle)+'</span>':'')||'بدون نام';
+  return '<article class="card" data-id="'+o.id+'"><header><span class="id">'+o.id+'</span>'+
+   '<select class="st" aria-label="وضعیت '+o.id+'">'+STATUSES.map((s,i)=>'<option value="'+i+'"'+(o.status===i?' selected':'')+'>'+s+'</option>').join('')+'</select></header>'+
+   '<div><b>'+esc(o.item||'—')+'</b>'+(o.qty>1?' × '+fa(o.qty):'')+'<div class="muted" style="font-size:13px">'+who+' · '+CATS[o.cat].label+' · '+fa(daysSince(o.created))+' روز پیش</div></div>'+
+   (p&&p.price?'<div style="font-size:13.5px">'+kt(p.price*(o.qty||1))+(g?' · '+(g.total<0?'ضرر تقریبی: ':'سود تقریبی: ')+kt(Math.abs(g.total)):'')+'</div>':'')+
+   '<div class="chips">'+(fl.length?fl.map(f=>'<span class="chip '+f.t+'">'+esc(f.x)+'</span>').join(''):'<span class="chip ok">بدون مشکل</span>')+'</div>'+
+   (o.status>=3?'<div><label for="tr'+o.id+'">کد رهگیری</label><input class="tr" id="tr'+o.id+'" dir="ltr" value="'+esc(o.tracking)+'"></div>':'')+
+   '<label style="display:flex;gap:6px;align-items:center;margin:0"><input class="fr" type="checkbox" style="width:auto"'+(o.free?' checked':'')+'> ارسال رایگان دادم</label>'+
+   '<div class="btns" style="margin-top:2px"><button class="btn small lk">کپی لینک وضعیت</button><button class="btn small mg">کپی پیام به مشتری</button></div></article>';
+}
+
+let F={cat:'fixed',done:null,errs:false};
+function renderForm(){
+  const v=$('#view');
+  v.innerHTML='<div class="grid2"><section class="panel"><h2>فرم سفارش مشتری</h2><p class="muted" style="font-size:13px">این صفحه همان فرمی است که فروشنده در بیو یا پاسخ خودکار می‌گذارد. مشتری همه چیز را یک‌جا می‌نویسد و لازم نیست وسط چت چیزی جمع شود.</p>'+
+   '<div class="seg" role="group" id="fcat">'+Object.keys(CATS).map(k=>'<button data-c="'+k+'" aria-pressed="'+(k===F.cat)+'">'+CATS[k].label+'</button>').join('')+'</div>'+
+   '<form id="cf" novalidate><div id="ff">'+formHtml(F.cat,{qty:1,pay:'unpaid'})+'</div><div class="btns"><button class="btn primary" type="submit">ثبت سفارش</button></div></form></section>'+
+   '<section class="panel" id="fres"><h2>پس از ثبت</h2>'+(F.done?doneHtml(F.done):'<p class="empty">مشتری کد پیگیری و لینک وضعیتش را همین‌جا می‌گیرد و فروشنده سفارش را در «جدول سفارش‌ها» می‌بیند.</p>')+'</section></div>';
+  $$('#fcat button').forEach(b=>b.onclick=()=>{F.cat=b.dataset.c;F.done=null;renderForm()});
+  $('#cf').onsubmit=e=>{e.preventDefault(); const o=readForm($('#ff'),F.cat); const m=missing(o);
+    if(m.length){F.done={err:m};renderForm();return}
+    const a=addOrder(o); F.done={id:a.id}; renderForm()};
+  if(F.done&&F.done.id){$('#cp1').onclick=()=>copy(statusLink(F.done.id))}
+}
+function doneHtml(d){
+  if(d.err)return '<p class="hint">این موارد هنوز لازم است: '+esc(d.err.join('، '))+'</p>';
+  return '<p><span class="chip ok">ثبت شد</span></p><p>کد پیگیری: <b>'+d.id+'</b></p><p><a href="#status-'+d.id+'">دیدن صفحهٔ وضعیت</a></p><div class="btns"><button class="btn small" id="cp1">کپی لینک وضعیت</button></div>';
+}
+
+function renderCustomers(){
+  const v=$('#view'); const map={};
+  S.orders.forEach(o=>{const k=o.handle||o.name; if(!k)return; (map[k]=map[k]||[]).push(o)});
+  const rows=Object.keys(map).map(k=>{const os=map[k].slice().sort((a,b)=>b.created-a.created); const last=os[0]; return{k,count:os.length,days:daysSince(last.created),item:last.item,name:last.name||'',os}}).sort((a,b)=>b.days-a.days);
+  const due=rows.filter(r=>r.days>=S.cycle);
+  v.innerHTML='<div class="grid2"><section class="panel"><h2>امروز به این‌ها پیام بده</h2><p class="muted" style="font-size:13px">مشتری‌هایی که از آخرین خریدشان بیشتر از <b>'+fa(S.cycle)+'</b> روز گذشته است (چرخهٔ خرید را در «هزینه و حاشیه» عوض می‌کنی).</p>'+
+    (due.length?due.map(r=>{const msg='سلام'+(r.name?' '+r.name:'')+'، '+fa(Math.round(r.days/30))+' ماه از آخرین خریدت ('+r.item+') گذشته. همان را دوباره برایت آماده کنم؟';
+      return '<div style="border-top:1px solid var(--line);padding:10px 0"><b dir="auto">'+esc(r.k)+'</b> <span class="chip warn">'+fa(r.days)+' روز</span><div class="muted" style="font-size:13px">آخرین خرید: '+esc(r.item)+' · '+fa(r.count)+' سفارش</div><div class="btns" style="margin-top:6px"><button class="btn small rm" data-m="'+esc(msg)+'">کپی پیام یادآوری</button></div></div>'}).join(''):'<p class="empty">امروز کسی سررسید نشده است.</p>')+
+   '</section><section class="panel"><h2>همهٔ مشتری‌ها</h2><div class="tableBox"><table><thead><tr><th>مشتری</th><th>سفارش</th><th>آخرین خرید</th><th>«همون قبلی»</th></tr></thead><tbody>'+
+   rows.map(r=>'<tr><td dir="auto">'+esc(r.k)+'</td><td>'+fa(r.count)+'</td><td>'+fa(r.days)+' روز پیش</td><td>'+esc(r.item)+'</td></tr>').join('')+'</tbody></table></div></section></div>';
+  $$('.rm',v).forEach(b=>b.onclick=()=>copy(b.dataset.m));
+}
+
+function renderCosts(){
+  const v=$('#view');
+  v.innerHTML='<section class="panel"><h2>هزینه و حاشیه سود</h2><p class="muted" style="font-size:13px">قیمت و هزینهٔ مواد هر محصول را یک‌بار می‌نویسی (هزار تومان). هر سفارش، حاشیه‌اش را خودش حساب می‌کند. این بخش فقط عدد را نشان می‌دهد؛ تصمیم قیمت با خودت است.</p>'+
+   '<div class="tableBox"><table><thead><tr><th>محصول</th><th>قیمت فروش</th><th>هزینهٔ مواد</th><th>حاشیه</th></tr></thead><tbody>'+
+   S.products.map((p,i)=>{const m=p.price?(p.price-p.cost)/p.price*100:0;const cls=m<0?'bad':(m<S.threshold?'warn':'ok');
+     return '<tr><td>'+esc(p.name)+'</td><td><input type="number" data-i="'+i+'" data-k="price" value="'+p.price+'"></td><td><input type="number" data-i="'+i+'" data-k="cost" value="'+p.cost+'"></td><td><span class="chip '+cls+'">'+(m<0?'منفی ':'')+fa(Math.abs(m).toFixed(0))+'٪</span></td></tr>'}).join('')+'</tbody></table></div>'+
+   '<div class="row" style="margin-top:14px"><div><label for="th">آستانهٔ هشدار حاشیه (٪)</label><input id="th" type="number" value="'+S.threshold+'"></div><div><label for="po">هزینهٔ پست (هزار تومان)</label><input id="po" type="number" value="'+S.post+'"></div><div><label for="cy">چرخهٔ خرید مشتری (روز)</label><input id="cy" type="number" value="'+S.cycle+'"></div></div>'+
+   '<details><summary>این اعداد از کجا آمده‌اند؟</summary><p class="muted" style="font-size:13px">اعداد شمع از برگهٔ هزینهٔ نمونهٔ پرونده است (موم، شیشه، فتیله، اسانس، برچسب). فرض‌ها: ۲۰۰ و ۴۰۰ گرم همان وزن موم است، رنگ حساب نشده، و ست هدیه دو شمع کوچک به‌اضافهٔ جعبه است. کارتن، پست رایگان و کار دست در حاشیه نیامده‌اند؛ پست رایگان فقط روی هر سفارش جدا کم می‌شود.</p></details></section>';
+  $$('input[data-i]',v).forEach(i=>i.onchange=e=>{S.products[+i.dataset.i][i.dataset.k]=+e.target.value||0;save();renderCosts()});
+  $('#th').onchange=e=>{S.threshold=+e.target.value||0;save()}; $('#po').onchange=e=>{S.post=+e.target.value||0;save()}; $('#cy').onchange=e=>{S.cycle=+e.target.value||1;save()};
+}
+
+function renderStatus(id){
+  $('#tabs').innerHTML=''; const v=$('#view'); const o=S.orders.find(x=>x.id===id);
+  if(!o){v.innerHTML='<section class="panel"><h2>سفارش پیدا نشد</h2><p>کد «'+esc(id)+'» در این دفتر نیست. کد را از فروشنده دوباره بپرس.</p><p><a href="#board">بازگشت به دفتر</a></p></section>';return}
+  v.innerHTML='<section class="panel" style="max-width:560px"><p class="muted" style="margin:0">صفحهٔ وضعیت سفارش (آنچه مشتری می‌بیند)</p><h2>سفارش '+o.id+'</h2><p><b>'+esc(o.item)+'</b>'+(o.qty>1?' × '+fa(o.qty):'')+'</p>'+
+   '<div class="steps">'+STATUSES.map((s,i)=>'<span class="'+(i<o.status?'done':i===o.status?'on':'')+'">'+s+'</span>').join('')+'</div>'+
+   (o.tracking?'<p>کد رهگیری: <b dir="ltr">'+esc(o.tracking)+'</b></p>':'<p class="muted">کد رهگیری بعد از ارسال همین‌جا نوشته می‌شود.</p>')+
+   '<p class="muted" style="font-size:13px">ثبت‌شده در '+jdate(o.created)+'</p><p><a href="#board">بازگشت به دفتر فروشنده</a></p></section>';
+}
+
+/* ---------- router ---------- */
+function route(){
+  const h=(location.hash||'').replace('#','');
+  if(h.indexOf('status-')===0){$('#banner').hidden=true;return renderStatus(h.slice(7))}
+  $('#banner').hidden=false;
+  const cur=['extract','board','form','customers','costs'].indexOf(h)>-1?h:'extract';
+  renderTabs(cur);
+  ({extract:renderExtract,board:renderBoard,form:renderForm,customers:renderCustomers,costs:renderCosts})[cur]();
+}
+window.addEventListener('hashchange',route);
+if(!X.out&&S.mode==='demo'){X.out=normalize(SAMPLES[0].out)}
+route();
+})();
+</script>
